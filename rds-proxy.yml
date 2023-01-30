@@ -19,7 +19,7 @@ Resources:
    Type: AWS::RDS::DBProxyTargetGroup
    DependsOn: DBProxy
    Properties:
-     DBProxyName: MyProxy
+     DBProxyName: MyProxy 
      TargetGroupName: default
      DBInstanceIdentifiers: 
        - Fn::ImportValue: MyRDS
