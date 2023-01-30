@@ -13,7 +13,7 @@ Resources:
       -  Fn::ImportValue: !Sub pubsubnet2id
      VpcSecurityGroupIds:
         - Fn::ImportValue: !Sub MySGID
-
+ 
 
  ProxyTargetGroup: 
    Type: AWS::RDS::DBProxyTargetGroup
