@@ -1,0 +1,27 @@
+Resources:
+  
+ DBProxy:
+   Type: AWS::RDS::DBProxy
+   Properties:
+     DBProxyName: MyProxy
+     EngineFamily: MYSQL
+     RoleArn: !ImportValue iamArn
+     Auth:
+       - {AuthScheme: SECRETS, SecretArn: !ImportValue MySecretid, IAMAuth: DISABLED}
+     VpcSubnetIds:
+      -  Fn::ImportValue: !Sub pubsubnet1id
+      -  Fn::ImportValue: !Sub pubsubnet2id
+     VpcSecurityGroupIds:
+        - Fn::ImportValue: !Sub MySGID
+
+
+ ProxyTargetGroup: 
+   Type: AWS::RDS::DBProxyTargetGroup
+   DependsOn: DBProxy
+   Properties:
+     DBProxyName: MyProxy
+     TargetGroupName: default
+     DBInstanceIdentifiers: 
+       - Fn::ImportValue: MyRDS
+   
+

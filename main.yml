@@ -1,0 +1,73 @@
+Parameters:
+  VPCBlock:
+    Type: String
+    Description: The CIDR block for the VPC
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
+    Default: 10.0.0.0/16
+  RDSUserName:
+    Type: String
+    Description: The username for the RDS database
+  RDSDatabaseName:
+    Type: String
+    Description: The name of the RDS database
+  RDSPassword:
+    Type: String
+    NoEcho: true
+    Description: The password for the RDS database
+  DBInstanceClass:
+    Type: String
+    Description: The class of the RDS instance
+    AllowedValues:
+      - db.t2.micro
+      - db.t2.small
+      - db.t2.medium
+    Default: db.t2.micro
+  Storage:
+    Type: Number
+    Description: The storage size for the RDS instance
+    AllowedValues: [5, 10, 20, 30, 40, 50]
+    Default: 10
+
+Resources:
+
+  VPCsetupstack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://rds-setup-file.s3.ap-south-1.amazonaws.com/vpc.yml
+      Parameters:
+        VPCBlock: !Ref VPCBlock
+      TimeoutInMinutes: 50
+
+  RDSsetupstack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: VPCsetupstack
+    Properties:
+      TemplateURL: !Sub https://rds-setup-file.s3.ap-south-1.amazonaws.com/rds.yml
+      Parameters:
+        RDSDatabaseName: !Ref RDSDatabaseName  
+        RDSUserName: !Ref RDSUserName
+        RDSPassword: !Ref RDSPassword
+        DBInstanceClass: !Ref DBInstanceClass
+        Storage: !Ref Storage
+      TimeoutInMinutes: 50
+
+  SMsetupstack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: RDSsetupstack
+    Properties:
+      TemplateURL: !Sub https://rds-setup-file.s3.ap-south-1.amazonaws.com/secret.yml
+      TimeoutInMinutes: 50
+
+  IAMsetupstack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: SMsetupstack
+    Properties:
+      TemplateURL: !Sub https://rds-setup-file.s3.ap-south-1.amazonaws.com/iam.yml
+      TimeoutInMinutes: 50
+
+  RDSPROXYsetupstack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: IAMsetupstack
+    Properties:
+      TemplateURL: !Sub https://rds-setup-file.s3.ap-south-1.amazonaws.com/rds-proxy.yml
+      TimeoutInMinutes: 50

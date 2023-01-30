@@ -1,0 +1,96 @@
+Parameters:
+  RDSUserName:
+    Type: String
+    Description: The username for the RDS database
+  RDSDatabaseName:
+    Type: String
+    Description: The name of the RDS database
+  RDSPassword:
+    Type: String
+    NoEcho: true
+    Description: The password for the RDS database
+  DBInstanceClass:
+    Type: String
+    Description: The class of the RDS instance
+    AllowedValues:
+      - db.t2.micro
+      - db.t2.small
+      - db.t2.medium
+    Default: db.t2.micro
+  Storage:
+    Type: Number
+    Description: The storage size for the RDS instance
+    AllowedValues: [5, 10, 20, 30, 40, 50]
+    Default: 10
+
+Resources:
+
+  RDS:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Ref RDSDatabaseName
+      DBName: !Ref RDSDatabaseName  
+      MasterUsername: !Ref RDSUserName
+      MasterUserPassword: !Ref RDSPassword
+      Engine: MySQL
+      DBInstanceClass: !Ref DBInstanceClass
+      StorageType: gp2
+      PubliclyAccessible: True
+      AllocatedStorage: !Ref Storage
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups: 
+      - !Ref EC2SecurityGroup
+
+  EC2SecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupName: RDS-SG
+      GroupDescription: "Database Instances Security Group"
+      VpcId:
+        Fn::ImportValue: MyVPC
+      SecurityGroupIngress: 
+        - 
+          CidrIp: "0.0.0.0/0"
+          FromPort: 3306
+          IpProtocol: "tcp"
+          ToPort: 3306
+
+  DBSubnetGroup: 
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties: 
+      DBSubnetGroupDescription: description
+      SubnetIds: 
+        -  Fn::ImportValue: !Sub pubsubnet1id
+        -  Fn::ImportValue: !Sub pubsubnet2id
+      Tags: 
+        - 
+          Key: String
+          Value: String
+
+Outputs:
+
+  RDSID:
+    Value: !Ref RDS
+    Description: RDS Database ID
+    Export:
+      Name: "MyRDS"
+
+  RDSSecurityGroup:
+    Value: !Ref EC2SecurityGroup
+    Description: Security Group ID
+    Export:
+      Name: "MySGID"
+
+  RDSUserName:
+    Value: !Ref RDSUserName
+    Description: RDS UserName
+    Export:
+      Name: RDSUsername
+
+  RDSPassword:
+    Value: !Ref RDSPassword
+    Description: RDS Password
+    Export:
+      Name: RDSPassword
+
+    
